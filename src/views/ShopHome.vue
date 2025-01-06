@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>Shacoooo prout poney</h1>
+        <h1>Shaci shaco prout poney</h1>
     </div>
 </template>
 
