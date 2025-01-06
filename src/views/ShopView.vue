@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>Bienvenue dans la bouuutique</h1>
+        <h1>Bienvenue dans la bouutique</h1>
         <router-view></router-view>
     </div>
 </template>
