@@ -13,6 +13,7 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 
+
 export default {
   name: 'ShopLoginView',
   data: () => ({
@@ -24,11 +25,24 @@ export default {
     ...mapState(['shopUser'])
   },
   methods: {
-    ...mapActions(['shopLogin']),
+    ...mapActions('shop', ['shopLogin']),
     async handleLogin() {
-      const success = await this.shopLogin({ login: this.login, password: this.password });
-      this.loginMessage = success ? 'Login successful!' : 'Invalid login or password.';
-    }
+      try {
+          const response = await this.shopLogin({ login: this.login, password: this.password });
+          console.log('Réponse obtenue:', response);
+
+          if (response.error === 0) {
+              this.loginMessage = "Login successful";
+              console.log('Login successful:', response.data);
+              //this.$router.push('/shop/buy'); // Redirection après succès
+          } else {
+              this.loginMessage = response.data;
+          }
+      } catch (err) {
+          console.error('Erreur dans handleLogin:', err);
+          this.loginMessage = "Erreur lors du login. Veuillez réessayer.";
+      }
+  }
   }
 }
 </script>

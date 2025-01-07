@@ -30,12 +30,26 @@
         methods: {
             changeSelection(event) {
                 this.checked = event;
+                console.log('Checked viruses:', this.checked);
             },
             showVirusInfos(event) {
-                //TODO
+                const virus = this.filterViruses.find(v => v.id === event);
+                if (virus) {
+                    alert(`Virus Info:\nName: ${virus.name}\nPrice: ${virus.price}\nDescription: ${virus.description}`);
+                } else {
+                    alert('Virus not found.');
+                }
             },
             showVirusNames() {
-                // TODO
+                if (this.checked.length === 0) {
+                    alert('No viruses selected.');
+                } else {
+                    const names = this.filterViruses
+                        .filter(v => this.checked.includes(v.id))
+                        .map(v => v.name)
+                        .join(', ');
+                    alert(`Selected Viruses: ${names}`);
+                }
             }
         }
     };

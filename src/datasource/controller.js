@@ -9,28 +9,38 @@ import bcrypt from 'bcryptjs'
 
   Exemple 1 : se loguer auprès de la boutique
  */
-function shopLogin(data) {
-  if ((!data.login) || (!data.password)) return {error: 1, status: 404, data: 'aucun login/pass fourni'}
-  // pour simplifier : test uniquement le login
-  let user = shopusers.find(e => e.login === data.login)
-  if (!user) return {error: 1, status: 404, data: 'login incorrect'}
-  // vérifier le mot de passe
-  const passwordMatch = bcrypt.compareSync(data.password, user.password)
-  if (!passwordMatch) return {error: 1, status: 404, data: 'pass incorrect'}
-  // générer un uuid de session pour l'utilisateur si non existant
-  if (!user.session) {
-    user.session = uuidv4()
+  function shopLogin(data) {
+    if (!data.login || !data.password) {
+      return { error: 1, status: 400, data: 'Login et mot de passe requis' };
+    }
+  
+    let user = shopusers.find(e => e.login === data.login);
+    if (!user) return { error: 1, status: 404, data: 'Utilisateur non trouvé' };
+  
+    const passwordMatches = bcrypt.compareSync(data.password, user.password);
+    if (!passwordMatches) {
+      return { error: 1, status: 403, data: 'Mot de passe incorrect' };
+    }
+  
+    if (!user.session) {
+      user.session = uuidv4(); // Générer un identifiant unique pour la session
+    }
+  
+    // Stocker la session dans localStorage pour que l'utilisateur soit authentifié après un refresh
+    localStorage.setItem('userSession', user.session);
+  
+    return {
+      error: 0,
+      status: 200,
+      data: {
+        _id: user._id,
+        name: user.name,
+        login: user.login,
+        email: user.email,
+        session: user.session,
+      },
+    };
   }
-  // retourne uniquement les champs nécessaires
-  let u = {
-    _id: user._id,
-    name: user.name,
-    login: user.login,
-    email: user.email,
-    session: user.session
-  }
-  return {error: 0, status: 200, data: u}
-}
 
 function getAllViruses() {
   return {error: 0, data: items}

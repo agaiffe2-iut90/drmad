@@ -1,12 +1,13 @@
 import Vue from "vue";
 import Vuex from "vuex";
 
-import shopService from "@/services/shop.service";
+import ShopService from "@/services/shop.service";
 
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
+export default ({
+    namespaced: true,
     state: () => ({
         viruses: [],
         shopUser: null,
@@ -23,18 +24,23 @@ export default new Vuex.Store({
 
     actions: {
         async shopLogin({ commit }, data) {
-            console.log("login");
-            let response = await shopService.shopLogin(data);
-            if (response.error === 0) {
-                commit("updateShopUser", response.data);
-            } else {
-                console.log(response.data);
+            try {
+                const response = await ShopService.shopLogin(data);
+                if (response.error === 0) {
+                    commit('updateShopUser', response.data);
+                    return response;
+                } else {
+                    return response;
+                }
+            } catch (error) {
+                console.error("Erreur lors de la connexion :", error);
+                return { error: 1, data: "Erreur lors de la connexion" };
             }
         },
 
         async getAllViruses({ commit }) {
             console.log("récupération des viruses");
-            let response = await shopService.getAllViruses();
+            let response = await ShopService.getAllViruses();
             if (response.error === 0) {
                 commit("updateViruses", response.data);
             } else {
