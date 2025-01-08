@@ -43,6 +43,11 @@ async function viderPanierFromLocalSource(data) {
   return LocalSource.viderPanier(data)
 }
 
+async function removeItemFromBasketFromLocalSource(data) {
+  // récupération auprès de la source locale
+  return LocalSource.removeItemFromBasket(data)
+}
+
 async function shopLogin(data) {
   let response = null;
   try {
@@ -122,6 +127,19 @@ async function viderPanier(data){
   return response
 }
 
+async function removeItemFromBasket(data){
+  let response = null;
+  try {
+    // changer la méthode appelée quand cette fonctionnalité l'API est prête
+    response = await removeItemFromBasketFromLocalSource(data)
+  }
+  // NB: le catch n'aura lieu que pour des requête vers l'API, s'il y a une erreur réseau
+  catch(err) {
+    response = {error: 1, status: 404, data: 'erreur réseau, impossible de retirer l\'article du panier'  }
+  }
+  return response
+}
+
 
 
 export default {
@@ -130,5 +148,6 @@ export default {
   addItemToBasket,
   editBasketById,
   getBasketById,
-  viderPanier
+  viderPanier,
+  removeItemFromBasket
 }

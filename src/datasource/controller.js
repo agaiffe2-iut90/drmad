@@ -138,6 +138,21 @@ async function viderPanier(data) {
   return {error: 0, status: 200, data: user.basket}
 }
 
+async function removeItemFromBasket(data) {
+  let id = data.id
+  let basket = data.basket
+  if (!id) {
+    return {error: 1, status: 400, data: 'identifiant requis'}
+  }
+  for (let i = 0; i < shopusers.length; i++) {
+    if (shopusers[i]._id === id) {
+      shopusers[i].basket = basket
+      return {error: 0, status: 200, data: basket}
+    }
+  }
+  return {error: 1, status: 404, data: 'panier non trouvé'}
+}
+
 export default{
   shopLogin,
   getAllViruses,
@@ -146,5 +161,6 @@ export default{
   addItemToBasket,
   updateBasketById,
   getBasketById,
-  viderPanier
+  viderPanier,
+  removeItemFromBasket
 }

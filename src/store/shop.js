@@ -59,6 +59,42 @@ export default ({
             } else {
                 console.log(response.data);
             }
-        }
+        },
+
+        async editBasketById({ commit }, data) {
+            let response = await ShopService.editBasketById(data);
+            if (response.error === 0) {
+                commit("updateBasket", response.data);
+            } else {
+                console.log(response.data);
+            }
+        },
+
+        async removeItemFromBasket({ commit }, data) {
+            let response = await ShopService.removeItemFromBasket(data);
+            if (response.error === 0) {
+                commit("updateBasket", response.data);
+            } else {
+                console.log(response.data);
+            }
+        },
+
+        async getBasketById({ commit }, data) {
+            let response = await ShopService.getBasketById(data);
+            if (response.error === 0) {
+                commit("updateBasket", response.data);
+            } else {
+                console.log(response.data);
+            }
+        },
+        
+        async viderPanier({ commit }, data) {
+            let response = await ShopService.viderPanier(data);
+            if (response.error === 0) {
+                commit("updateBasket", response.data);
+            } else {
+                console.log(response.data);
+            }
+        },
     },
 })
