@@ -55,6 +55,11 @@ export default {
     listButton: Object, // l'objet pour le bouton de liste
     itemAmount: Boolean, // Affiche le champ de saisie numérique si true
   },
+  data() {
+    return {
+      amounts: {},
+    };
+  },
   methods: {
     // Mise à jour de la valeur dans l'item
     updateAmount(index, value) {

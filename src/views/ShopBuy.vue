@@ -4,7 +4,7 @@
             <ItemsList />
         </div>
         <div class="basket-list">
-            <BasketList />
+            <!-- <BasketList /> -->
         </div>
     </div>
 </template>

@@ -34,7 +34,7 @@ export default {
           if (response.error === 0) {
               this.loginMessage = "Login successful";
               console.log('Login successful:', response.data);
-              //this.$router.push('/shop/buy'); // Redirection après succès
+              this.$router.push('/shop/buy'); // Redirection après succès
           } else {
               this.loginMessage = response.data;
           }

@@ -11,6 +11,7 @@ export default ({
     state: () => ({
         viruses: [],
         shopUser: null,
+        basket: [],
     }),
 
     mutations: {
@@ -19,6 +20,9 @@ export default ({
         },
         updateShopUser(state, user) {
             state.shopUser = user;
+        },
+        updateBasket(state, basket) {
+            state.basket = basket;
         },
     },
 
@@ -47,5 +51,14 @@ export default ({
                 console.log(response.data);
             }
         },
+
+        async addItemToBasket({ commit }, data) {
+            let response = await ShopService.addItemToBasket(data);
+            if (response.error === 0) {
+                commit("updateBasket", response.data);
+            } else {
+                console.log(response.data);
+            }
+        }
     },
 })
