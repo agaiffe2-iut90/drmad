@@ -158,29 +158,39 @@ async function addOrderByUserId(data){
     return {error: 1, status: 404, data: 'utilisateur non trouvé'}
   }
 
-  function buyOrderById(data){
-    let user_id = data.user_id
-    let order_id = data.order_id
-    if(!user_id){
-      return {error: 1, status: 400, data: 'identifiant requis'}
+  function buyOrderById(data) {
+    const { user_id, order_id } = data;
+
+    console.log('user ID: ', user_id);
+    console.log('order ID: ', order_id);
+
+    // Vérification des identifiants requis
+    if (!user_id) {
+        console.log("Identifiant utilisateur requis");
+        return { error: 1, status: 400, data: 'Identifiant utilisateur requis' };
     }
-    if(!order_id){
-      return {error: 1, status: 400, data: 'identifiant de commande requis'}
+    
+
+    // Recherche de l'utilisateur
+    const user = shopusers.find(u => u._id === user_id);
+    if (!user) {
+        console.log(`Utilisateur avec l'ID ${user_id} non trouvé`);
+        return { error: 1, status: 404, data: 'Utilisateur non trouvé' };
     }
 
-    for(let i = 0; i < shopusers.length; i++){
-      if(shopusers[i]._id === user_id){
-        for(let j = 0; j < shopusers[i].orders.length; j++){
-          if(shopusers[i].orders[j].uuid === order_id){
-            shopusers[i].orders[j].status = "finalized"
-            return {error: 0, status: 200, data: shopusers[i].orders[j]}
-          }
-        }
-      }
+    // Recherche de la commande
+    const order = user.orders.find(o => o.uuid === order_id);
+    if (!order) {
+        console.log(`Commande avec l'ID ${order_id} non trouvée pour l'utilisateur ${user_id}`);
+        return { error: 1, status: 404, data: 'Commande non trouvée' };
     }
-    console.log("aucun utilisateur ou commande trouvés")
-    return {error: 1, status: 404, data: 'utilisateur ou commande non trouvés'}
-  }
+
+    // Finalisation de la commande
+    order.status = "finalized";
+    console.log(`Commande ${order_id} de l'utilisateur ${user_id} finalisée avec succès`);
+    
+    return { error: 0, status: 200, data: order };
+}
 
   function getOrdersByUserId(data){
     let user_id = data.user_id
