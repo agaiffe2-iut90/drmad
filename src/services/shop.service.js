@@ -48,6 +48,16 @@ async function removeItemFromBasketFromLocalSource(data) {
   return LocalSource.removeItemFromBasket(data)
 }
 
+async function updateBasketByIdFromLocalSource(data) {
+  // récupération auprès de la source locale
+  return LocalSource.updateBasketById(data)
+}
+
+async function addOrderByUserIdFromLocalSource(data) {
+  // récupération auprès de la source locale
+  return LocalSource.addOrderByUserId(data)
+}
+
 async function shopLogin(data) {
   let response = null;
   try {
@@ -83,6 +93,7 @@ async function addItemToBasket(data){
   }
   // NB: le catch n'aura lieu que pour des requête vers l'API, s'il y a une erreur réseau
   catch(err) {
+    console.log(err)
     response = {error: 1, status: 404, data: 'erreur réseau, impossible d\'ajouter l\'article au panier'  }
   }
   return response
@@ -140,6 +151,32 @@ async function removeItemFromBasket(data){
   return response
 }
 
+async function updateBasketById(data){
+  let response = null;
+  try {
+    // changer la méthode appelée quand cette fonctionnalité l'API est prête
+    response = await updateBasketByIdFromLocalSource(data)
+  }
+  // NB: le catch n'aura lieu que pour des requête vers l'API, s'il y a une erreur réseau
+  catch(err) {
+    response = {error: 1, status: 404, data: 'erreur réseau, impossible de mettre à jour le panier'  }
+  }
+  return response
+}
+
+async function addOrderByUserId(data){
+  let response = null;
+  try {
+    // changer la méthode appelée quand cette fonctionnalité l'API est prête
+    response = await addOrderByUserIdFromLocalSource(data)
+  }
+  // NB: le catch n'aura lieu que pour des requête vers l'API, s'il y a une erreur réseau
+  catch(err) {
+    response = {error: 1, status: 404, data: 'erreur réseau, impossible de passer la commande'  }
+  }
+  return response
+}
+
 
 
 export default {
@@ -149,5 +186,7 @@ export default {
   editBasketById,
   getBasketById,
   viderPanier,
-  removeItemFromBasket
+  removeItemFromBasket,
+  updateBasketById,
+  addOrderByUserId
 }

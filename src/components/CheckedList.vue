@@ -6,7 +6,7 @@
         type="checkbox"
         v-if="itemCheck"
         :checked="checked[indexRow]"
-        @click="$emit('checked-changed', indexRow)"
+        @change="$emit('checked-changed', indexRow)"
       >
 
       <!-- Champs affichés -->
@@ -18,15 +18,17 @@
       <input 
         v-if="itemAmount" 
         type="number" 
-        v-model="item.amount" 
-        @change="updateAmount(indexRow, item.amount)"
+        :value="amounts[indexRow] || 1" 
+        min="1"
+        step="1"
+        @input="updateAmount(indexRow, $event.target.value)"
       >
 
       <!-- Bouton par item -->
       <button 
         v-if="itemButton && itemButton.show" 
         color="grey" 
-        @click="onItemButtonClick(indexRow, item.amount)"
+        @click="onItemButtonClick(indexRow)"
       >
         {{ itemButton.text }}
       </button>
@@ -57,29 +59,38 @@ export default {
   },
   data() {
     return {
-      amounts: {},
+      amounts: {}, // Gestion des montants
     };
   },
   methods: {
     // Mise à jour de la valeur dans l'item
     updateAmount(index, value) {
-      this.$emit("amount-changed", { index, value });
+      const amount = parseInt(value, 10);
+      if (isNaN(amount) || amount <= 0) {
+        console.error("La valeur doit être un nombre positif");
+        return;
+      }
+      
+      // Mise à jour du montant dans la structure amounts
+      this.$set(this.amounts, index, amount);
+      // Envoi de l'événement au parent pour mise à jour du montant
+      this.$emit("update:amounts", { index, amount });
     },
 
     // Gestion du clic sur le bouton d'un item
-    onItemButtonClick(index, amount) {
-      const payload = this.itemAmount ? { index, amount } : { index };
-      this.$emit("item-button-clicked", payload);
+    onItemButtonClick(index) {
+      const amount = this.amounts[index] || 0;
+      this.$emit("item-button-clicked", { index, amount });
     },
 
     // Gestion du clic sur le bouton de liste
     onListButtonClick() {
       const selectedItems = this.data
         .map((item, index) => {
-          if (this.checked[index] && this.itemAmount) {
-            return { index, amount: item.amount || 0 };
-          } else if (this.checked[index]) {
-            return { index };
+          if (this.checked[index]) {
+            // Si un montant est spécifié pour l'item
+            const amount = this.amounts[index] || 0;
+            return { index, amount };
           }
           return null;
         })
@@ -87,7 +98,7 @@ export default {
 
       this.$emit("list-button-clicked", selectedItems);
 
-      // Désélection des items
+      // Réinitialisation des cases cochées après traitement
       this.$emit("update:checked", this.checked.map(() => false));
     },
   },

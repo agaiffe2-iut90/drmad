@@ -63,40 +63,6 @@ function getAccountTransactions(number) {
   return {error: 0, status: 200, data: trans}
 }
 
-async function addItemToBasket(data) {
-  let amount = data.amount
-  if (amount < 1) {
-    return {error: 1, status: 400, data: 'montant incorrect'}
-  }
-
-  let basket = data.basket
-  let virus = data.virus
-  let stock = virus.stock
-
-  if (stock === 0) {
-    return {error: 1, status: 400, data: 'stock épuisé'}
-  }
-
-  //parcour du panier pour voir si le virus est déjà présent
-  let item = basket.find(e => e._id === virus._id)
-  if (item) {
-    // si le virus est déjà présent, on incrémente la quantité
-    item.amount += amount
-    virus.stock -= amount
-  } else {
-    // sinon, on ajoute le virus au panier
-    item = {
-      _id: virus._id,
-      name: virus.name,
-      price: virus.price,
-      amount: amount
-    }
-    virus.stock -= amount
-    basket.push(item)
-  }
-  return {error: 0, status: 200, data: basket}
-
-}
 
 async function updateBasketById(data){
   let id = data.id
@@ -153,14 +119,50 @@ async function removeItemFromBasket(data) {
   return {error: 1, status: 404, data: 'panier non trouvé'}
 }
 
+
+async function addOrderByUserId(data){
+  let id = data.user_id
+  let order = {"items": data.items}
+  if (!id) {
+    return {error: 1, status: 400, data: 'identifiant requis'}
+  }
+  let sum = 0
+  for (let i = 0; i < order.items.length; i++) {
+    let item = order.items[i]
+    let promotion = 0
+    for (let j = 0; j < items.item.promotion.length; j++) { 
+      if (items.item.promotion[j].amount === item.amount) {
+        promotion = items.item.promotion[j].discount
+      }
+    }
+    sum += (item.item.price * item.amount) * (1 - promotion/100)
+    }
+    console.log("total: ", sum)
+    order["date"] = new Date()
+    order["total"] = sum
+    order["status"] = "en attente"
+    order["uuid"] = uuidv4()
+
+    for (let i = 0; i < shopusers.length; i++) {
+      if (shopusers[i]._id === id) {
+        shopusers[i].orders.push(order)
+        return {error: 0, status: 200, data: order}
+      }
+    }
+
+    console.log("aucun utilisateur trouvés")
+    return {error: 1, status: 404, data: 'utilisateur non trouvé'}
+  }
+  
+
 export default{
   shopLogin,
   getAllViruses,
   getAccountAmount,
   getAccountTransactions,
-  addItemToBasket,
   updateBasketById,
   getBasketById,
   viderPanier,
-  removeItemFromBasket
+  removeItemFromBasket,
+  addOrderByUserId
 }
