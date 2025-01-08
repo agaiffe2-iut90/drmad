@@ -130,9 +130,12 @@ async function addOrderByUserId(data){
   for (let i = 0; i < order.items.length; i++) {
     let item = order.items[i]
     let promotion = 0
-    for (let j = 0; j < items.item.promotion.length; j++) { 
-      if (items.item.promotion[j].amount === item.amount) {
-        promotion = items.item.promotion[j].discount
+    let itemData = items.find(i => i._id === item.item._id);
+    if (itemData && itemData.promotion) {
+      for (let j = 0; j < itemData.promotion.length; j++) {
+      if (itemData.promotion[j].amount === item.amount) {
+        promotion = itemData.promotion[j].discount;
+      }
       }
     }
     sum += (item.item.price * item.amount) * (1 - promotion/100)
@@ -146,12 +149,76 @@ async function addOrderByUserId(data){
     for (let i = 0; i < shopusers.length; i++) {
       if (shopusers[i]._id === id) {
         shopusers[i].orders.push(order)
+        console.log("commande ajoutée")
         return {error: 0, status: 200, data: order}
       }
     }
 
     console.log("aucun utilisateur trouvés")
     return {error: 1, status: 404, data: 'utilisateur non trouvé'}
+  }
+
+  function buyOrderById(data){
+    let user_id = data.user_id
+    let order_id = data.order_id
+    if(!user_id){
+      return {error: 1, status: 400, data: 'identifiant requis'}
+    }
+    if(!order_id){
+      return {error: 1, status: 400, data: 'identifiant de commande requis'}
+    }
+
+    for(let i = 0; i < shopusers.length; i++){
+      if(shopusers[i]._id === user_id){
+        for(let j = 0; j < shopusers[i].orders.length; j++){
+          if(shopusers[i].orders[j].uuid === order_id){
+            shopusers[i].orders[j].status = "finalized"
+            return {error: 0, status: 200, data: shopusers[i].orders[j]}
+          }
+        }
+      }
+    }
+    console.log("aucun utilisateur ou commande trouvés")
+    return {error: 1, status: 404, data: 'utilisateur ou commande non trouvés'}
+  }
+
+  function getOrdersByUserId(data){
+    let user_id = data.user_id
+    if(!user_id){
+      return {error: 1, status: 400, data: 'identifiant requis'}
+    }
+
+    for(let i = 0; i < shopusers.length; i++){
+      if(shopusers[i]._id === user_id){
+        return {error: 0, status: 200, data: shopusers[i].orders}
+      }
+    }
+    console.log("aucun utilisateur trouvé")
+    return {error: 1, status: 404, data: 'utilisateur non trouvé'}
+  }
+
+  function cancelOrderById(data){
+    let user_id = data.user_id
+    let order_id = data.order_id
+    if(!user_id){
+      return {error: 1, status: 400, data: 'identifiant requis'}
+    }
+    if(!order_id){
+      return {error: 1, status: 400, data: 'identifiant de commande requis'}
+    }
+
+    for(let i = 0; i < shopusers.length; i++){
+      if(shopusers[i]._id === user_id){
+        for(let j = 0; j < shopusers[i].orders.length; j++){
+          if(shopusers[i].orders[j].uuid === order_id){
+            shopusers[i].orders[j].status = "cancelled"
+            return {error: 0, status: 200, data: shopusers[i].orders[j]}
+          }
+        }
+      }
+    }
+    console.log("aucun utilisateur ou commande trouvés")
+    return {error: 1, status: 404, data: 'utilisateur ou commande non trouvés'}
   }
   
 
@@ -164,5 +231,8 @@ export default{
   getBasketById,
   viderPanier,
   removeItemFromBasket,
-  addOrderByUserId
+  addOrderByUserId,
+  buyOrderById,
+  getOrdersByUserId,
+  cancelOrderById
 }

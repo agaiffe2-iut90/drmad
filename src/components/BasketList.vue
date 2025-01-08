@@ -2,7 +2,8 @@
     <div class="basket-wrapper">
         <h2>Basket</h2>
         <CheckedList @list-button-clicked="emptyBasket()" @item-button-clicked="removeItem($event)" :data=formatedBasket
-            :fields=fields :itemCheck=itemCheck :itemButton=itemButton :listButton=listButton />
+            :fields=fields :itemCheck=itemCheck :itemButton=itemButton />
+        <button @click="emptyBasket" :disabled="basketIsEmpty()">{{ listButton.text }}</button>
         <button class="buy-button" @click="buyBasket()" :disabled="basketIsEmpty()">Buy</button>
         <button class="addOrder-button" @click="addToOrders()" :disabled="basketIsEmpty()">Add to orders</button>
     </div>
@@ -41,6 +42,7 @@ export default {
             this.removeItemFromBasketByItemId(item_id)
         },
         async buyBasket() {
+            console.log("buying basket called")
             // Creation des donnees a envoyer au serveur
             let data = {
                 user_id: this.shopUser._id,
@@ -48,13 +50,17 @@ export default {
             }
             // Attente de la reponse du serveur
             let response = await ShopService.addOrderByUserId(data)
-            let uuid = response.data
+            console.log("response data:", response.data)
+            let uuid = response.data.uuid
             // Verification de l'UUID
             if (this.isUUID(uuid)) {
-                {
-                    this.emptyBasket()
-                    router.push({ name: 'shopPay', params: { orderId: uuid } })
-                }
+                
+                console.log("uuid is valid with uuid: " + uuid)
+                this.emptyBasket()
+                router.push({ name: 'shopPay', params: { orderId: uuid } })
+            
+            } else {
+                console.log("uuid is not valid with uuid: " + uuid)
             }
         },
         async addToOrders() {

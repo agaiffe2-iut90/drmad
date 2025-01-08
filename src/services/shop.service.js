@@ -58,6 +58,21 @@ async function addOrderByUserIdFromLocalSource(data) {
   return LocalSource.addOrderByUserId(data)
 }
 
+async function buyOrderByIdFromLocalSource(data) {
+  // récupération auprès de la source locale
+  return LocalSource.buyOrderById(data)
+}
+
+async function getOrdersByUserIdFromLocalSource(data) {
+  // récupération auprès de la source locale
+  return LocalSource.getOrdersByUserId(data)
+}
+
+async function cancelOrderByIdFromLocalSource(data) {
+  // récupération auprès de la source locale
+  return LocalSource.cancelOrderById(data)
+}
+
 async function shopLogin(data) {
   let response = null;
   try {
@@ -172,7 +187,50 @@ async function addOrderByUserId(data){
   }
   // NB: le catch n'aura lieu que pour des requête vers l'API, s'il y a une erreur réseau
   catch(err) {
+    console.log(err)
     response = {error: 1, status: 404, data: 'erreur réseau, impossible de passer la commande'  }
+  }
+  return response
+}
+
+async function buyOrderById(data){
+  let response = null;
+  try {
+    // changer la méthode appelée quand cette fonctionnalité l'API est prête
+    response = await buyOrderByIdFromLocalSource(data)
+  }
+  // NB: le catch n'aura lieu que pour des requête vers l'API, s'il y a une erreur réseau
+  catch(err) {
+    console.log(err)
+    response = {error: 1, status: 404, data: 'erreur réseau, impossible de passer la commande'  }
+  }
+  return response
+}
+
+async function getOrdersByUserId(data){
+  let response = null;
+  try {
+    // changer la méthode appelée quand cette fonctionnalité l'API est prête
+    response = await getOrdersByUserIdFromLocalSource(data)
+  }
+  // NB: le catch n'aura lieu que pour des requête vers l'API, s'il y a une erreur réseau
+  catch(err) {
+    console.log(err)
+    response = {error: 1, status: 404, data: 'erreur réseau, impossible de récupérer les commandes'  }
+  }
+  return response
+}
+
+async function cancelOrderById(data){
+  let response = null;
+  try {
+    // changer la méthode appelée quand cette fonctionnalité l'API est prête
+    response = await cancelOrderByIdFromLocalSource(data)
+  }
+  // NB: le catch n'aura lieu que pour des requête vers l'API, s'il y a une erreur réseau
+  catch(err) {
+    console.log(err)
+    response = {error: 1, status: 404, data: 'erreur réseau, impossible d\'annuler la commande'  }
   }
   return response
 }
@@ -188,5 +246,8 @@ export default {
   viderPanier,
   removeItemFromBasket,
   updateBasketById,
-  addOrderByUserId
+  addOrderByUserId,
+  buyOrderById,
+  getOrdersByUserId,
+  cancelOrderById
 }

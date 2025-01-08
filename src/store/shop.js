@@ -140,12 +140,33 @@ export default ({
             }
         },
 
-        async removeItemFromBasket({ commit }, data) {
-            let response = await ShopService.removeItemFromBasket(data);
-            if (response.error === 0) {
-                commit("updateBasket", response.data);
+        async removeItemFromBasketByItemId({ state, commit }, item_id) {
+            let basket = [...state.basket]
+            // Verifier que l'item_id soit valide
+            if (item_id === null || item_id < 0 || item_id >= basket.length) {
+              console.log('Invalid item_id');
+              return;
+            }
+      
+            // Suppression de l'item du panier
+        basket.splice(item_id, 1);
+            let response = await ShopService.updateBasketById({ id: state.shopUser._id, basket });
+            if (response?.error === 0) {
+              console.log('mise à jour du panier');
+              commit('updateBasket', response.data);
             } else {
-                console.log(response.data);
+              console.log(response?.data || 'Error updating basket');
+            }
+        },
+
+        async emptyBasket({ state, commit }) {
+            let basket = [];
+            console.log('mise à jour du panier : ' + basket);
+            let response = await ShopService.updateBasketById({ id: state.shopUser._id, basket });
+            if (response?.error === 0) {
+              commit('updateBasket', response.data);
+            } else {
+              console.log(response?.data || 'Error updating basket');
             }
         },
 
@@ -160,6 +181,42 @@ export default ({
         
         async viderPanier({ commit }, data) {
             let response = await ShopService.viderPanier(data);
+            if (response.error === 0) {
+                commit("updateBasket", response.data);
+            } else {
+                console.log(response.data);
+            }
+        },
+
+        async addOrderByUserId({ commit }, data) {
+            let response = await ShopService.addOrderByUserId(data);
+            if (response.error === 0) {
+                commit("updateBasket", response.data);
+            } else {
+                console.log(response.data);
+            }
+        },
+
+        async buyOrderById({ commit }, data) {
+            let response = await ShopService.buyOrderById(data);
+            if (response.error === 0) {
+                commit("updateBasket", response.data);
+            } else {
+                console.log(response.data);
+            }
+        },
+
+        async getOrdersByUserId({ commit }, data) {
+            let response = await ShopService.getOrdersByUserId(data);
+            if (response.error === 0) {
+                commit("updateBasket", response.data);
+            } else {
+                console.log(response.data);
+            }
+        },
+
+        async cancelOrderById({ commit }, data) {
+            let response = await ShopService.cancelOrderById(data);
             if (response.error === 0) {
                 commit("updateBasket", response.data);
             } else {

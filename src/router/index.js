@@ -36,7 +36,7 @@ const routes = [
 
       {
         path: 'pay/:orderId',
-        name: 'shoppay',
+        name: 'shopPay',
         component: () => import('../views/ShopPay.vue'),
         props: true
       }
