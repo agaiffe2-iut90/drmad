@@ -11,12 +11,12 @@
 
 <script>
 import ItemsList from '@/components/ItemsList.vue';
-import basketList from '@/components/BasketList.vue';
+import BasketList from '@/components/BasketList.vue';
 
 export default {
     components: {
         ItemsList,
-        basketList,
+        BasketList,
     }
 };
 </script>

@@ -1,96 +1,122 @@
 <template>
-    <div>
-        <h2>Panier</h2>
-        <CheckedList 
-            :data="formatedBasket"
-            :fields="fields" 
-            :itemCheck="true" 
-            :checked="checked" 
-            :itemButton="itemButton" 
-            :listButton="listButton" 
-            :itemAmount="true" />
-        <button @click="emptyBasket">Vider le panier</button>
+    <div class="basket-wrapper">
+        <h2>Basket</h2>
+        <CheckedList @list-button-clicked="emptyBasket()" @item-button-clicked="removeItem($event)" :data=formatedBasket
+            :fields=fields :itemCheck=itemCheck :itemButton=itemButton :listButton=listButton />
+        <button class="buy-button" @click="buyBasket()" :disabled="basketIsEmpty()">Buy</button>
+        <button class="addOrder-button" @click="addToOrders()" :disabled="basketIsEmpty()">Add to orders</button>
     </div>
 </template>
-
 <script>
-import CheckedList from '@/components/CheckedList.vue';
-import router from '@/router';
-import { mapActions, mapState } from 'vuex';
-import shopService from '../services/shop.service';
+import { mapState, mapActions } from 'vuex';
+import CheckedList from './CheckedList.vue';
+import ShopService from '../services/shop.service.js';
+import router from '../router';
+
+
 export default {
-    name: 'BasketList',
+    name: "BasketList",
     components: {
-        CheckedList,
+        CheckedList
     },
     data: () => ({
-        fields: ['name', 'price', ['promotion', ['discount', 'amount']], 'amount'],
-        checked: [], // Contient les items sélectionnés
+        itemCheck: false,
         listButton: {
             show: true,
-            text: 'Vider le panier',
+            text: "Vider panier",
+            color: "white"
         },
+        fields: [
+            "name",
+            "description",
+            "price",
+            ['promotion', ['discount', 'amount']],
+            "amount"
+        ],
     }),
-    computed: {
-        ...mapState('shop', ['basket']),
-        itemButton() {
-            let itemButton = []
-            for (let i = 0; i < this.basket.length; i++) {
-                itemButton.push({
-                    show: true,
-                    text: 'Supprimer',
-                });
-            }
-            return itemButton;
+    methods: {
+        ...mapActions('shop', ['emptyBasket', 'removeItemFromBasketByItemId', 'setBasket']),
+        removeItem(item_id) {
+            console.log("item id " + item_id)
+            this.removeItemFromBasketByItemId(item_id)
         },
-
-        formatedBasket() {
-            return this.basket.map((item) => {
-                return {
-                    ...item,
-                    amount: item.amount,
-                };
-            });
+        async buyBasket() {
+            // Creation des donnees a envoyer au serveur
+            let data = {
+                user_id: this.shopUser._id,
+                items: this.basket
+            }
+            // Attente de la reponse du serveur
+            let response = await ShopService.addOrderByUserId(data)
+            let uuid = response.data
+            // Verification de l'UUID
+            if (this.isUUID(uuid)) {
+                {
+                    this.emptyBasket()
+                    router.push({ name: 'shopPay', params: { orderId: uuid } })
+                }
+            }
+        },
+        async addToOrders() {
+            // Creation des donnees a envoyer au serveur
+            let data = {
+                user_id: this.shopUser._id,
+                items: this.basket
+            }
+            // Attente de la reponse du serveur
+            let response = await ShopService.addOrderByUserId(data)
+            console.log(response.data)
+            let uuid = response.data
+            // Verification de l'UUID
+            if (this.isUUID(uuid)) {
+                {
+                    this.emptyBasket()
+                    router.push({ name: 'shopOrders'})
+                }
+            }
+        },
+        isUUID(uuid) {
+            let s = "" + uuid;
+            s = s.match('^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$');
+            if (s === null) {
+                return false;
+            }
+            return true;
+        },
+        basketIsEmpty(){
+            return this.formatedBasket.length === 0
         }
     },
-    methods: {
-        ...mapActions('shop', ['emptyBasket', 'setBasket']),
-
-        removeItem(id) {
-            console.log('Suppression de l\'élément avec l\'ID :', id);
-            this.$store.commit('shop/removeItem', id);
-        },
-
-        async buyBasket() {
-            const data = {
-                user_id: this.shop.user.id,
-                items: this.basket,
+    computed: {
+        ...mapState('shop', ['basket', 'shopUser']),
+        itemButton() {
+            return {
+                show: true,
+                text: "Remove",
+                color: "red"
             };
-
-            try {
-                const response = await shopService.addOrderByUserId(data);
-                const uuid = response.data;
-
-                if (this.isUUID(uuid)) {
-                    this.emptyBasket();
-                    router.push({ name: 'order', params: { uuid } });
-                }
-            } catch (error) {
-                console.error('Erreur lors de l\'achat du panier :', error);
+        },
+        formatedBasket() {
+            console.log("Formating basket", this.basket);  // Ajoute ce log pour vérifier le contenu du panier
+            let formatedBasket = [];
+            for (let i = 0; i < this.basket.length; i++) {
+                formatedBasket.push({
+                    name: this.basket[i].item.name,
+                    description: this.basket[i].item.description,
+                    price: this.basket[i].item.price,
+                    promotion: this.basket[i].item.promotion,
+                    amount: this.basket[i].amount // Vérifie ici si `amount` est bien récupéré
+                });
             }
-        },
-
-        isUUID(data) {
-            const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            return regex.test(data);
-        },
-
-        basketIsEmpty() {
-            return this.basket.length === 0;
-        },
+            return formatedBasket;
+        }
     },
     mounted() {
-        this.setBasket();
-    },
-};
+        this.setBasket()
+    }
+}
+
 </script>
+
+<style scoped>
+</style>

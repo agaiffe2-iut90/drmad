@@ -18,8 +18,8 @@
       <input 
         v-if="itemAmount" 
         type="number" 
-        :value="amounts[indexRow] || 1" 
-        min="1"
+        :value="amounts[indexRow] || 0" 
+        min="0"
         step="1"
         @input="updateAmount(indexRow, $event.target.value)"
       >
