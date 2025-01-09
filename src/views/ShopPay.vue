@@ -6,6 +6,11 @@
             <input type="text" id="order-id" v-model="currentOrderId"
                 :placeholder="currentOrderId || 'Entrez l\'id de la commande'"/>
         </div>
+        <div>
+            <label for="transaction-id">Id de la transaction :</label>
+            <input type="text" id="transaction-id" v-model="currentTransactionId"
+                :placeholder="currentTransactionId || 'Entrez l\'id de la transaction'"/>
+        </div>
         <button @click="payOrder">Payer</button>
         <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
     </div>
@@ -18,11 +23,13 @@ import shopService from '../services/shop.service.js';
 export default {
     name: 'ShopPay',
     props: {
-        orderId: String
+        orderId: String,
+        transactionId: String
     },
     data() {
         return {
             currentOrderId: this.orderId,
+            currentTransactionId: this.transactionId,
             errorMessage: '',
         }
     },
@@ -45,8 +52,15 @@ export default {
                 return;
             }
 
+            // Vérification si transactionId est fourni
+            const transactionId = this.currentTransactionId;
+            if (!transactionId) {
+                this.errorMessage = "Identifiant de la transaction requis.";
+                return;
+            }
+
             try {
-                const data = { order_id: orderId, user_id: this.shopUser._id };
+                const data = { order_id: orderId, user_id: this.shopUser._id, transaction_id: transactionId };
                 const response = await shopService.buyOrderById(data);
 
                 if (response.error === 0) {

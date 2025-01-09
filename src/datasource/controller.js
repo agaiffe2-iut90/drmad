@@ -159,17 +159,25 @@ async function addOrderByUserId(data){
   }
 
   function buyOrderById(data) {
-    const { user_id, order_id } = data;
+    const { user_id, order_id, transactionId } = data;
 
     console.log('user ID: ', user_id);
     console.log('order ID: ', order_id);
+    console.log('transaction ID: ', transactionId);
 
     // Vérification des identifiants requis
     if (!user_id) {
         console.log("Identifiant utilisateur requis");
         return { error: 1, status: 400, data: 'Identifiant utilisateur requis' };
     }
-    
+    if (!order_id) {
+        console.log("Identifiant de commande requis");
+        return { error: 1, status: 400, data: 'Identifiant de commande requis' };
+    }
+    if (!transactionId) {
+        console.log("Identifiant de transaction requis");
+        return { error: 1, status: 400, data: 'Identifiant de transaction requis' };
+    }
 
     // Recherche de l'utilisateur
     const user = shopusers.find(u => u._id === user_id);
@@ -185,12 +193,24 @@ async function addOrderByUserId(data){
         return { error: 1, status: 404, data: 'Commande non trouvée' };
     }
 
+    // Vérification de la transaction bancaire
+    const transaction = user.transactions.find(t => t.id === transactionId && t.orderId === order_id);
+    if (!transaction) {
+        console.log(`Transaction avec l'ID ${transactionId} non trouvée ou non associée à la commande ${order_id}`);
+        return { error: 1, status: 404, data: 'Transaction bancaire non valide ou non trouvée' };
+    }
+
+    if (transaction.status !== 'completed') {
+        console.log(`Transaction ${transactionId} pour la commande ${order_id} non finalisée`);
+        return { error: 1, status: 400, data: 'Transaction bancaire non finalisée' };
+    }
+
     // Finalisation de la commande
     order.status = "finalized";
     console.log(`Commande ${order_id} de l'utilisateur ${user_id} finalisée avec succès`);
     
     return { error: 0, status: 200, data: order };
-}
+  }
 
   function getOrdersByUserId(data){
     let user_id = data.user_id
