@@ -6,7 +6,7 @@
             </template>
         </NavBar>
 
-        <VerticalMenu>
+        <VerticalMenu :items="items">
             <template v-slot:vmenu-title="{ label }">
                 <span>{{ label }}</span>
             </template>
@@ -30,6 +30,7 @@
 <script>
 import NavBar from "@/components/NavBar";
 import VerticalMenu from "@/components/VerticalMenu";
+
 
 export default{
     name: "BankView",
