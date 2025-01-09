@@ -2,13 +2,13 @@
   <div>
     <table>
       <tr>
-        <td v-for="(link, index) in titles" :key="index" :style="{paddingRight: '10px'}">
+        <td v-for="(link, index) in links" :key="index" :style="{paddingRight: '10px'}">
           <button
-              @click="$emit('menu-clicked', index)"
+              @click="goTo(link.to)"
               :style="{backgroundColor: link.color}"
               class="nav-button"
           >
-            {{link.text}}
+            <slot :name="'button-' + link.label" :label="link.label">{{ link.label }}</slot>
           </button>
         </td>
       </tr>
@@ -17,9 +17,16 @@
 </template>
 
 <script>
+import router from "@/router";
+
 export default {
   name: "NavBar",
-  props: { titles: Array},
+  props: { links: Array},
+  methods: {
+    goTo(dest){
+      router.push({path: dest})
+    }
+  }
 }
 </script>
 

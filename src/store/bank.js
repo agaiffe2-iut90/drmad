@@ -7,12 +7,15 @@ vue.use(vuex);
 
 export default new vuex.Store({
     state: () => ({
-        accountAmount: 0,
+        currentAccount: null,
         accountTransactions: [],
-        accountNumberError: 0,
+        successMessage: '',
     }),
 
     mutations: {
+        updateCurrentAccount(state, account) {
+            state.currentAccount = account;
+        },
         updateAccountAmount(state, amount) {
             state.accountAmount = amount;
         },
@@ -25,22 +28,52 @@ export default new vuex.Store({
     },
 
     actions: {
-        async getAccountAmount({ commit }) {
-            console.log('récupération du solde du compte');
-            let response = await bankAccountService.getAccountAmount();
-            if (response.error === 0) {
-                commit('updateAccountAmount', response.data);
-            } else {
-                console.log(response.data);
+        async getAccount({ commit }, accountNumber) {
+            try {
+                const response = await bankAccountService.getAccount(accountNumber);
+                commit('updateCurrentAccount', response.data);
+                commit('updateAccountNumberError', 0);
+            } catch (error) {
+                commit('updateAccountNumberError', error.response.status);
             }
         },
-        async getAccountTransactions({ commit }) {
-            console.log('récupération des transactions du compte');
-            let response = await bankAccountService.getAccountTransactions();
-            if (response.error === 0) {
+
+        async getTransactions({ commit }, accountNumber) {
+            try {
+                const response = await bankAccountService.getTransactions(accountNumber);
                 commit('updateAccountTransactions', response.data);
-            } else {
-                console.log(response.data);
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
+        async createWithdraw({ commit }, data) {
+            try {
+                const response = await bankAccountService.createWithdraw(data);
+                commit('updateCurrentAccount', response.data);
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
+        async createPayment({ commit }, data) {
+            try {
+                const response = await bankAccountService.createPayment(data);
+                commit('updateCurrentAccount', response.data);
+            } catch (error) {
+                console.error(error);
+            }
+        },
+
+        async validateOperation({ commit }, data) {
+            try {
+                const response = await bankAccountService.validateOperation(data);
+                commit('updateCurrentAccount', response.data);
+                commit('updateAccountAmount', response.data.amount);
+                commit('updateAccountTransactions', response.data.transactions);
+                commit('updateSuccessMessage', response.data.message);
+            } catch (error) {
+                console.error(error);
             }
         },
     },

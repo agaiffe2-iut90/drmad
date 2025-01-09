@@ -5,13 +5,6 @@ Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/bank/account',
-    name: 'bankaccount',
-    // import dynamique du composant, plutôt qu'en début de fichier, comme la route prédécente.
-    component: () => import('../views/BankAccountView.vue')
-  },
-
-  {
     path: '/shop',
     name: 'shopmain',
     children: [
@@ -42,6 +35,45 @@ const routes = [
       }
     ],
     component: () => import('../views/ShopView.vue')
+  },
+
+  {
+    path: '/bank',
+    name: 'bankmain',
+    children: [
+      {
+        path: '/',
+        name: 'bankhome',
+        alias: '/bank/home',
+        component: () => import('../views/ShopHome.vue')
+      },
+      {
+        path: 'account',
+        name: 'bankaccount',
+        component: () => import('../views/BankAccountView.vue')
+      },
+      {
+        path: 'amount',
+        name: 'bankamount',
+        component: () => import('../views/BankAmount.vue')
+      },
+      {
+        path: 'operation',
+        name: 'bankoperation',
+        component: () => import('../views/BankOperation.vue')
+      },
+      {
+        path: "history",
+        name: "bankhistory",
+        component: () => import("../views/BankHistory.vue")
+      },
+      {
+        path: "logout",
+        name: "banklogout",
+        component: () => import("../views/BankLogout.vue")
+      }
+    ],
+    component: () => import('../views/BankView.vue')
   }
 
 ]

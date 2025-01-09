@@ -73,6 +73,9 @@ async function cancelOrderByIdFromLocalSource(data) {
   return LocalSource.cancelOrderById(data)
 }
 
+
+
+// ------------ Fonctions primaires ---------------------
 async function shopLogin(data) {
   let response = null;
   try {
@@ -249,5 +252,5 @@ export default {
   addOrderByUserId,
   buyOrderById,
   getOrdersByUserId,
-  cancelOrderById
+  cancelOrderById,
 }

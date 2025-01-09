@@ -1,6 +1,12 @@
 <template>
     <div>
-        <NavBar :titles="titles" @menu-clicked="goTo($event)"></NavBar>
+        <NavBar :links="links" >
+            <template v-slot:boutton-Login="{ label }">
+                <div>
+                    <span>{{ label }}</span>
+                </div>
+            </template>
+        </NavBar>
         <router-view></router-view>
     </div>
 </template>
@@ -12,7 +18,7 @@ export default {
     name: 'ShopView',
     components: {NavBar},
     data: () => ({
-        titles: [{text:'Login', color: 'red'},]
+        links: [{label: "Login", to: "/shop/login"},]
     }),
     methods: {
         goTo(index) {

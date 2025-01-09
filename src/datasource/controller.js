@@ -3,6 +3,7 @@ import {v4 as uuidv4} from 'uuid'
 
 import bcrypt from 'bcryptjs'
 
+
 /* controllers: les fonctions ci-dessous doivent mimer ce que renvoie l'API en fonction des requêtes possibles.
 
   Dans certains cas, ces fonctions vont avoir des paramètres afin de filtrer les données qui se trouvent dans data.js
@@ -47,21 +48,6 @@ function getAllViruses() {
   return {error: 0, data: items}
 }
 
-function getAccountAmount(number) {
-  if (!number) return {error: 1, status: 404, data: 'aucun numéro de compte bancaire fourni'}
-  let account = bankaccounts.find(a => a.number === number)
-  if (!account) return {error: 1, status: 404, data: 'numéro de compte bancaire incorrect'}
-  return {error: 0, status: 200, data: account.amount}
-}
-
-function getAccountTransactions(number) {
-  if (!number) return {error: 1, status: 404, data: 'aucun numéro de compte bancaire fourni'}
-  let account = bankaccounts.find(a => a.number === number)
-  if (!account) return {error: 1, status: 404, data: 'numéro de compte bancaire incorrect'}
-  // récupérer les transaction grâce à l'_id du compte
-  let trans = transactions.filter(t => t.account === account._id)
-  return {error: 0, status: 200, data: trans}
-}
 
 
 async function updateBasketById(data){
@@ -251,12 +237,139 @@ async function addOrderByUserId(data){
     return {error: 1, status: 404, data: 'utilisateur ou commande non trouvés'}
   }
   
+  function getAccount(data){
+    let number = data.number
+    if (!number) {
+      return {error: 1, status: 400, data: 'numéro de compte requis'}
+    }
+    let account = bankaccounts.find(a => a.number === number)
+    if (!account) {
+      return {error: 1, status: 404, data: 'compte non trouvé'}
+    }
+    return {error: 0, status: 200, data: account}
+  }
+
+  function getTransactions(data){
+    let id = data.id
+    if (!id) {
+      return {error: 1, status: 400, data: 'id non fourni'}
+    }
+    let account = bankaccounts.find(a => a.id === id)
+    if (!account) {
+      return {error: 1, status: 404, data: 'compte non trouvé'}
+    }
+    let transactions = transactions.filter(t => t.account === account._id)  
+    return {error: 0, status: 200, data: transactions}
+
+  }
+
+  function createWithdraw(data){
+    let id = data.idAccount
+    let amount = data.amount
+    if (!id) {
+      return {error: 1, status: 400, data: 'id non fourni'}
+    }
+    if (!amount) {
+      return {error: 1, status: 400, data: 'montant non fourni'}
+    }
+    let account = getAccount({id: id})
+    if (account.error === 1) {
+      return {error: 1, status: 404, data: 'compte non trouvé'}
+    }
+
+    if (account.data.amount < amount){
+      let transaction = {'_id': id, 'amount': -amount, 'acount': id, 'date': {$date: new Date()}, 'uuid': uuidv4()}
+      transactions.push(transaction)
+      account.amount -= amount
+      return {error: 0, status: 200, data: transaction}
+    }
+    return {error: 1, status: 400, data: 'solde insuffisant'}
+  }
+
+  function createPayment(data){
+    let id = data.idAccount
+    let amount = data.amount
+    let destNumber = data.destNumber
+    if (!id) {
+      return {error: 1, status: 400, data: 'id non fourni'}
+    }
+    if (!amount) {
+      return {error: 1, status: 400, data: 'montant non fourni'}
+    }
+    if (!destNumber) {
+      return {error: 1, status: 400, data: 'numéro de compte destinataire non fourni'}
+    }
+    let account = getAccount({id: id})
+    if (account.error === 1) {
+      return {error: 1, status: 404, data: 'compte non trouvé'}
+    }
+    let destAccount = getAccount({number: destNumber})
+    if (destAccount.error === 1) {
+      return {error: 1, status: 404, data: 'compte destinataire non trouvé'}
+    }
+
+    //si montant supérieur à la somme sur le compte
+    if (account.data.amount < amount){
+      let date = new Date()
+      let payer_transaction = {'_id': id, 'amount': -amount, 'acount': id, 'date': {$date: date}, 'uuid': uuidv4()}
+      let dest_transaction = {'_id': destAccount._id, 'amount': amount, 'acount': destAccount._id, 'date': {$date: date}, 'uuid': uuidv4()}
+      transactions.push(payer_transaction)
+      transactions.push(dest_transaction)
+      account.amount -= amount
+      destAccount.amount += amount
+      return {error: 0, status: 200, data: payer_transaction}
+    }
+    return {error: 1, status: 400, data: 'solde insuffisant'}
+  }
+
+  function validateOperation(data){
+    let currentAccount = data.currentAccount
+    let amount = data.amount
+    let isRecipient = data.isRecipient
+
+    if (!currentAccount) {
+      return {error: 1, status: 400, data: 'compte non fourni'}
+    }
+    if (!amount) {
+      return {error: 1, status: 400, data: 'montant non fourni'}
+    }
+    if (!isRecipient) {
+      return {error: 1, status: 400, data: 'destinataire non fourni'}
+    }
+
+    let transaction = {'_id': currentAccount, 'amount': amount, 'acount': currentAccount, 'date': {$date: new Date()}, 'uuid': uuidv4()}
+
+    if (isRecipient) {
+      let destAccount = getAccount({number: isRecipient})
+      if (destAccount.error === 1) {
+        return {error: 1, status: 404, data: 'compte destinataire non trouvé'}
+      }
+      transaction['amount'] = -amount
+      transaction['acount'] = destAccount._id
+    }
+
+    if (!isRecipient) {
+      let account = getAccount({id: currentAccount})
+      if (account.error === 1) {
+        return {error: 1, status: 404, data: 'compte non trouvé'}
+      }
+      if (account.data.amount < amount){
+        return {error: 1, status: 400, data: 'solde insuffisant'}
+      }
+      account.data.amount -= amount
+    }
+
+    transactions.push(transaction)
+    return {error: 0, status: 200, data: transaction}
+
+
+  }
+
+
 
 export default{
   shopLogin,
   getAllViruses,
-  getAccountAmount,
-  getAccountTransactions,
   updateBasketById,
   getBasketById,
   viderPanier,
@@ -264,5 +377,10 @@ export default{
   addOrderByUserId,
   buyOrderById,
   getOrdersByUserId,
-  cancelOrderById
+  cancelOrderById,
+  getAccount,
+  getTransactions,
+  createWithdraw,
+  createPayment,
+  validateOperation
 }

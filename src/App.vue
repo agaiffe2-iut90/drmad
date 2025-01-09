@@ -1,6 +1,13 @@
 <template>
   <div id="app">
-    <NavBar :titles="titles" @menu-clicked="goTo($event)"></NavBar>
+    <NavBar :links="links">
+      <template v-slot:button-Boutique="{ label }">
+        <span>{{ label }}</span>
+      </template>
+      <template v-slot:button-banque>
+        <img src="@/assets/banque.png" alt="logobank" style="height: 30px;">
+      </template>
+    </NavBar>
 
     <h1>Welcome to DrMad app</h1>
 
@@ -16,20 +23,10 @@ export default {
   name: 'App',
   components: {NavBar},
   data: () => ({
-    titles: [ {text:'boutique', color: 'blue'},
-      {text:'Compte bancaire', color: 'red'},
-    ],
-    currentIndex: -1
+    links: [
+      {label: "Boutique", to: "/shop"},
+      {label: "banque", to: "/bank"},
+    ]
   }),
-  methods: {
-    goTo(index) {
-      if (index == 0) {
-        this.$router.push('/shop')
-      }
-      else if (index == 1) {
-        this.$router.push('/bank/account')
-      }
-    }
-  },
 };
 </script>
