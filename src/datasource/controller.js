@@ -4,6 +4,7 @@ import {v4 as uuidv4} from 'uuid'
 import bcrypt from 'bcryptjs'
 
 
+
 /* controllers: les fonctions ci-dessous doivent mimer ce que renvoie l'API en fonction des requêtes possibles.
 
   Dans certains cas, ces fonctions vont avoir des paramètres afin de filtrer les données qui se trouvent dans data.js
@@ -329,6 +330,9 @@ async function addOrderByUserId(data){
     let currentAccount = data.currentAccount
     let amount = data.amount
     let isRecipient = data.isRecipient
+    let dest = data.recipient
+
+    console.log("isRecipient: ", isRecipient)
 
     if (!currentAccount) {
       return {error: 1, status: 400, data: 'compte non fourni'}
@@ -343,7 +347,7 @@ async function addOrderByUserId(data){
     let transaction = {'_id': currentAccount, 'amount': amount, 'acount': currentAccount, 'date': {$date: new Date()}, 'uuid': uuidv4()}
 
     if (isRecipient) {
-      let destAccount = getAccount({number: isRecipient})
+      let destAccount = getAccount({number: dest})
       if (destAccount.error === 1) {
         return {error: 1, status: 404, data: 'compte destinataire non trouvé'}
       }
@@ -352,7 +356,7 @@ async function addOrderByUserId(data){
     }
 
     if (!isRecipient) {
-      let account = getAccount({id: currentAccount})
+      let account = getAccount({number: currentAccount.number})
       if (account.error === 1) {
         return {error: 1, status: 404, data: 'compte non trouvé'}
       }

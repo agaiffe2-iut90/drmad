@@ -67,9 +67,11 @@ async function createPayment(data){
 }
 
 async function validateOperation(data){
+  console.log("données reçus:", data);
   let response = null;
   try {
     response = await validateOperationFromLocalSource(data);
+    console.log("données reçus:", response);
   } catch (error) {
     console.error(error);
   }

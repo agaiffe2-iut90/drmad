@@ -26,6 +26,9 @@ export default ({
         updateAccountNumberError(state, error) {
             state.accountNumberError = error;
         },
+        updateSuccessMessage(state, message) {
+            state.successMessage = message;
+        },
 
         reset(state){
             state.currentAccount = null;
@@ -78,15 +81,16 @@ export default ({
         },
 
         async validateOperation({ commit }, data) {
-            try {
-                const response = await bankAccountService.validateOperation(data);
-                commit('updateCurrentAccount', response.data);
-                commit('updateAccountAmount', response.data.amount);
-                commit('updateAccountTransactions', response.data.transactions);
-                commit('updateSuccessMessage', response.data.message);
-            } catch (error) {
-                console.error(error);
+            const response = await bankAccountService.validateOperation(data);
+            if (response.error === 0) {
+              let message = "L'opération est validée avec le n° : " + response.data + ". Vous pouvez la retrouver dans l'historique";
+              commit('updateSuccessMessage', message);
+              setTimeout(() => {
+                commit('updateSuccessMessage', "");
+              }, 5000);
+            } else {
+              console.error(response.data);
             }
-        },
+          },
     },
 })

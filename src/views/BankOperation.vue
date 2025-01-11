@@ -1,54 +1,55 @@
 <template>
-    <div>
-        <h1><slot>Débit / Virement</slot></h1>
+    <div class="operation-wrapper">
+        <h1>
+            <slot name="title">Débit / Virement</slot>
+        </h1>
 
-        <div>
+        <div class="form-group">
             <label for="amount">Montant :</label>
-            <input 
-                type="number"
-                id="amount"
-                v-model="amount"
-                placeholder="Entrez le montant">
+            <input type="number" id="amount" v-model="amount" min="0" placeholder="Entrez le montant" />
         </div>
 
-        <div>
-            <input 
-                type="checkbox"
-                id="recipient-checkbox"
-                v-model="hasRecipient">
-            <label for="debit">Destinataire</label>
-            <input 
-                type="text"
-                v-if="hasRecipient"
-                v-model="recipient"
-                placeholder="Entrez le destinataire(numéro de compte)">
+        <div class="form-group">
+            <label>
+                <input type="checkbox" v-model="isRecipient" />
+                Destinataire
+            </label>
         </div>
 
-        <button @click="validateOperation">Valider</button>
+        <div v-if="isRecipient" class="form-group">
+            <label for="recipient">Numero de compte du destinataire :</label>
+            <input type="text" id="recipient" v-model="recipient" placeholder="Entrez le numero de compte du destinataire" />
+        </div>
 
-        <p v-if="sucessMessage">{{ sucessMessage }}</p>
+        <div class="form-group">
+            <button @click="validateOperation({
+                currentAccount: currentAccount,
+                amount: amount,
+                isRecipient: isRecipient,
+                recipient: recipient,
+            })">Valider</button>
+        </div>
+
+        <p v-if="successMessage" class="success">{{ successMessage }}</p>
     </div>
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import { mapActions, mapState } from 'vuex';
 
-export default{
-    name: "BankOperation",
-    data() {
-        return {
-            amount: null,
-            hasRecipient: false,
-            recipient: "",
-            sucessMessage: ""
-        }
-    },
+export default {
+    name: 'BankOperation',
+
+    data: () => ({
+        amount: null,
+        isRecipient: false,
+        recipient: '',
+    }),
     methods: {
         ...mapActions('bank', ['validateOperation']),
     },
     computed: {
-        ...mapState('bank', ['currentAccount', 'sucessMessage'])
+        ...mapState('bank', ['currentAccount', 'successMessage']),
     },
-}
-
+};
 </script>
