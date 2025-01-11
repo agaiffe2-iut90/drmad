@@ -5,7 +5,8 @@ import bankAccountService from '../services/bankaccount.service';
 
 vue.use(vuex);
 
-export default new vuex.Store({
+export default ({
+    namespaced: true,
     state: () => ({
         currentAccount: null,
         accountTransactions: [],
@@ -25,14 +26,22 @@ export default new vuex.Store({
         updateAccountNumberError(state, error) {
             state.accountNumberError = error;
         },
+
+        reset(state){
+            state.currentAccount = null;
+            state.accountTransactions = [];
+            state.successMessage = '';
+        }
     },
 
     actions: {
         async getAccount({ commit }, accountNumber) {
             try {
                 const response = await bankAccountService.getAccount(accountNumber);
-                commit('updateCurrentAccount', response.data);
-                commit('updateAccountNumberError', 0);
+                if (response.data && response.data.number) {
+                    commit('updateCurrentAccount', response.data);
+                    commit('updateAccountNumberError', 0);
+                }
             } catch (error) {
                 commit('updateAccountNumberError', error.response.status);
             }

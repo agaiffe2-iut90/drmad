@@ -1,54 +1,42 @@
 <template>
   <div>
-    <h1>Account data</h1>
-
-    <span>account number</span><input v-model="number"><button @click="resetAccountNumber">Reset</button>
-    <br />
-    <button :disabled="!isAccountNumberValid" @click="getAccountAmount(number)">Get amount</button><button :disabled="!isAccountNumberValid" @click="getAccountTransactions(number)">Get transactions</button>
-    <p v-if="accountNumberError===-1">invalid account number</p>
-    <hr />
-    <span>available amount : </span>
-    <span v-if="accountNumberError === 1" >{{accountAmount}}</span>
-    <span v-else></span>
-    <hr />
-    <p>passed transactions:</p>
-    <div v-if="accountNumberError === 1">
-      <ul>
-        <li v-for="(trans,index) in accountTransactions" :key="index">{{trans.amount}} the {{convertDate(trans.date.$date)}}</li>
-      </ul>
-    </div>
-    <span v-else></span>
-
+    <h1>Compte bancaire</h1>
+    <span>Numéro de compte: <input type="text" v-model="number"></span>
+    <button @click="login(number)">Valider</button>
+    <p v-if="message"> {{ message }}</p>
   </div>
-
 </template>
 
 <script>
+import { mapActions, mapState } from 'vuex'
 
-import {mapState, mapActions, mapMutations} from 'vuex'
+
 export default {
   name: 'BankAccountView',
-  data: () => ({
-    number: '',
-  }),
-  computed: {
-    ...mapState(['accountAmount', 'accountTransactions','accountNumberError']),
-    isAccountNumberValid() {
-      const rexp = RegExp('^[A-Za-z0-9]{22}-[0-9]{7}$','g')
-      return rexp.test(this.number)
+  data() {
+    return {
+      number: '',
+      message: ''
     }
   },
+  computed: {
+    ...mapState('bank', ['currentAccount'])
+  },
   methods: {
-    ...mapActions(['getAccountAmount','getAccountTransactions']),
-    ...mapMutations(['updateAccountNumberError']),
-    convertDate(date) {
-      let d = new Date(date)
-      return d.getMonth()+"/"+d.getDate()+"/"+d.getFullYear()+" the "+d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()
+    ...mapActions('bank', ['getAccount']),
+    async login(number) {
+        // D'abord appeler getAccount et attendre sa fin
+        await this.getAccount(number);
+
+        // Vérifier si le compte a été trouvé
+        if (this.$store.state.bank.currentAccount) {
+            this.message = ''; // Réinitialiser le message d'erreur
+            this.$router.push('/bank/home'); // Redirection vers la page d'accueil du compte
+        } else {
+            this.message = 'Compte inconnu'; // Afficher le message d'erreur si aucun compte n'est trouvé
+        }
     },
-    resetAccountNumber() {
-      this.number = ''
-      this.updateAccountNumberError(0)
-    }
   }
 }
+
 </script>

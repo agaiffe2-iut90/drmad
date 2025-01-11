@@ -16,7 +16,7 @@ export default{
     name: "BankAmount",
 
     computed: {
-        ...mapState(["currentAccount"])
+        ...mapState('bank', ["currentAccount"])
     }
 }
 </script>
