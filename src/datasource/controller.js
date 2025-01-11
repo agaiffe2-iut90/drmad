@@ -239,11 +239,14 @@ async function addOrderByUserId(data){
   
   function getAccount(data){
     let number = data.number
+    console.log("number: ", number)
     if (!number) {
+      console.log("numéro de compte requis")
       return {error: 1, status: 400, data: 'numéro de compte requis'}
     }
     let account = bankaccounts.find(a => a.number === number)
     if (!account) {
+      console.log("compte non trouvé")
       return {error: 1, status: 404, data: 'compte non trouvé'}
     }
     return {error: 0, status: 200, data: account}

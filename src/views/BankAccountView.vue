@@ -9,6 +9,7 @@
 
 <script>
 import { mapActions, mapState } from 'vuex'
+import router from '@/router';
 
 
 export default {
@@ -24,18 +25,19 @@ export default {
   },
   methods: {
     ...mapActions('bank', ['getAccount']),
-    async login(number) {
-        // D'abord appeler getAccount et attendre sa fin
-        await this.getAccount(number);
-
-        // Vérifier si le compte a été trouvé
-        if (this.$store.state.bank.currentAccount) {
-            this.message = ''; // Réinitialiser le message d'erreur
-            this.$router.push('/bank/home'); // Redirection vers la page d'accueil du compte
+    login(number) {
+    this.getAccount({ number }).then(account => {
+        if (account) {
+            this.message = '';
+            console.log("Compte valide :", account);
+            router.push('/bank/home');
         } else {
-            this.message = 'Compte inconnu'; // Afficher le message d'erreur si aucun compte n'est trouvé
+            this.message = 'Compte inconnu';
         }
-    },
+    }).catch(() => {
+        this.message = 'Erreur de connexion';
+    });
+},
   }
 }
 

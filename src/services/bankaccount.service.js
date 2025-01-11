@@ -26,6 +26,7 @@ async function validateOperationFromLocalSource(data) {
 }
 
 async function getAccount(data){
+  console.log("données reçus:", data);
   let response = null;
   try {
     response = await getAccountFromLocalSource(data);

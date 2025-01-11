@@ -41,9 +41,12 @@ export default ({
                 if (response.data && response.data.number) {
                     commit('updateCurrentAccount', response.data);
                     commit('updateAccountNumberError', 0);
+                    return response.data
                 }
+                return null
             } catch (error) {
                 commit('updateAccountNumberError', error.response.status);
+                return null
             }
         },
 
