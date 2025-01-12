@@ -26,19 +26,19 @@ export default {
   methods: {
     ...mapActions('bank', ['getAccount']),
     login(number) {
-    this.getAccount({ number }).then(account => {
-        if (account) {
-            this.message = '';
-            console.log("Compte valide :", account);
-            router.push('/bank/home');
-        } else {
-            this.message = 'Compte inconnu';
-        }
-    }).catch(() => {
-        this.message = 'Erreur de connexion';
-    });
-},
+        this.getAccount({ number }).then(account => {
+            if (account) {
+                this.message = '';  // Réinitialise le message d'erreur
+                console.log("Compte valide :", account);
+                router.push('/bank/home');  // Redirige si le compte est valide
+            } else {
+                this.message = 'Compte inconnu';  // Message d'erreur si compte introuvable
+            }
+        }).catch(() => {
+            this.message = 'Erreur de connexion';  // Message d'erreur en cas de problème
+        });
+    },
   }
-}
+  }
 
 </script>

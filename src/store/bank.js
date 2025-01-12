@@ -3,6 +3,8 @@ import vuex from 'vuex';
 
 import bankAccountService from '../services/bankaccount.service';
 
+
+
 vue.use(vuex);
 
 export default ({
@@ -15,7 +17,7 @@ export default ({
     }),
 
     mutations: {
-        updateCurrentAccount(state, account) {
+        updateAccount(state, account) {
             state.currentAccount = account;
         },
         updateAccountTransactions(state, transactions) {
@@ -27,6 +29,9 @@ export default ({
         updateErrorMessage(state, message) {
             state.errorMessage = message;
         },
+        updateAccountNumberError(state, error) {
+            state.accountNumberError = error;
+        },
         reset(state) {
             state.currentAccount = null;
             state.accountTransactions = [];
@@ -36,34 +41,54 @@ export default ({
     },
 
     actions: {
-        async getAccount({ commit }, accountNumber) {
+        async getAccount({ commit }, number) {
+            const response = await bankAccountService.getAccount({ number: number });
+            if (response.error === 0) {
+              commit('updateAccountNumberError', 1);
+              commit('updateAccount', response.data);
+            } else {
+              commit('updateAccountNumberError', -1);
+              console.error(response.data);
+            }
+          },
+
+        async getTransactionsByNumber({ commit }, accountNumber) {
             try {
-                const response = await bankAccountService.getAccount(accountNumber);
-                if (response.data?.number) {
-                    commit('updateCurrentAccount', response.data);
+                const response = await bankAccountService.getTransactionsByNumber(accountNumber);
+                console.log("Réponse API:", response);  // Ajoute ce log pour inspecter la réponse
+                if (response.data) {
+                    commit('updateAccountTransactions', response.data);
                     commit('updateErrorMessage', '');
                 } else {
-                    commit('updateErrorMessage', 'Compte introuvable.');
+                    commit('updateErrorMessage', 'Aucune transaction trouvée.');
                 }
             } catch (error) {
-                commit('updateErrorMessage', 'Erreur lors de la récupération du compte.');
+                commit('updateErrorMessage', 'Erreur lors de la récupération des transactions.');
                 console.error(error);
             }
         },
 
-        async getTransactions({ commit }, accountNumber) {
+        async getTransactions({ commit }, data) {
+            if (!data.accountNumber) {
+                commit('updateErrorMessage', 'Numéro de compte manquant.');
+                return;
+            }
+        
             try {
-                const response = await bankAccountService.getTransactions(accountNumber);
-                const formattedTransactions = response.data.map(transaction => ({
-                    ...transaction,
-                    date: transaction.date.$date || transaction.date,
-                    direction: transaction.amount < 0 ? 'S' : 'D',
-                }));
-                commit('updateAccountTransactions', formattedTransactions);
-                commit('updateErrorMessage', '');
+                const response = await bankAccountService.getTransactions(data);
+                console.log("Réponse API:", response);  // Ajoute ce log pour inspecter la réponse
+        
+                if (response.error === 0) {
+                    console.log('Structure de response.data :', response.data);
+                    commit('updateAccountTransactions', response.data);  // Mets à jour l'état avec les données
+                } else {
+                    console.log('Erreur API:', response);
+                    commit('updateErrorMessage', 'Erreur de récupération des transactions.');
+                    console.error('Erreur API:', response);
+                }
             } catch (error) {
                 commit('updateErrorMessage', 'Erreur lors de la récupération des transactions.');
-                console.error(error);
+                console.error("Erreur technique:", error);
             }
         },
 
@@ -81,7 +106,7 @@ export default ({
         
                 if (response.error === 0) {
                     // Utilise le champ `uuid` comme identifiant
-                    const operationUuid = response.data?.uuid || 'inconnu';
+                    const operationUuid = response.data || 'inconnu';
         
                     const message = `L'opération est validée avec le n° : ${operationUuid}. Vous pouvez la retrouver dans l'historique.`;
                     commit('updateSuccessMessage', message);

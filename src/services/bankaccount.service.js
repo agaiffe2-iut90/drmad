@@ -25,6 +25,11 @@ async function validateOperationFromLocalSource(data) {
   return LocalSource.validateOperation(data)
 }
 
+async function getTransationsByNumberFromLocalSource(data) {
+  // récupération auprès de la source locale
+  return LocalSource.getTransationsByNumber(data)
+}
+
 async function getAccount(data){
   console.log("données reçus:", data);
   let response = null;
@@ -40,6 +45,16 @@ async function getTransactions(data){
   let response = null;
   try {
     response = await getTransactionsFromLocalSource(data);
+  } catch (error) {
+    console.error(error);
+  }
+  return response;
+}
+
+async function getTransactionsByNumber(data){
+  let response = null;
+  try {
+    response = await getTransationsByNumberFromLocalSource(data);
   } catch (error) {
     console.error(error);
   }
@@ -83,6 +98,7 @@ async function validateOperation(data){
 export default {
   getAccount,
   getTransactions,
+  getTransactionsByNumber,
   createWithdraw,
   createPayment,
   validateOperation

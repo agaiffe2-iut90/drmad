@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 
 
 
+
 /* controllers: les fonctions ci-dessous doivent mimer ce que renvoie l'API en fonction des requêtes possibles.
 
   Dans certains cas, ces fonctions vont avoir des paramètres afin de filtrer les données qui se trouvent dans data.js
@@ -238,19 +239,39 @@ async function addOrderByUserId(data){
     return {error: 1, status: 404, data: 'utilisateur ou commande non trouvés'}
   }
   
-  function getAccount(data){
+  function getAccount(data) {
     let number = data.number
-    console.log("number: ", number)
-    if (!number) {
-      console.log("numéro de compte requis")
-      return {error: 1, status: 400, data: 'numéro de compte requis'}
+    if (number == null || number == "")
+      return
+    let id = getAccountId(data.number.number)
+    if (id.error === 1) {
+      console.log("id : ", id)
+      return { error: 1, status: 404, data: 'Error in recovering account id' }
     }
-    let account = bankaccounts.find(a => a.number === number)
-    if (!account) {
-      console.log("compte non trouvé")
-      return {error: 1, status: 404, data: 'compte non trouvé'}
+    return getAccountById({ account_id: id.data })
+  }
+
+  function getAccountById(data) {
+    let account_id = data.account_id
+    if (account_id == null || account_id == "")
+      return
+    for (let i = 0; i < bankaccounts.length; i++) {
+      if (bankaccounts[i]["_id"] === account_id) {
+        return { error: 0, status: 200, data: bankaccounts[i] }
+      }
     }
-    return {error: 0, status: 200, data: account}
+    return { error: 1, status: 404, data: 'No matching accounts found' }
+  }
+
+  function getAccountId(number) {
+    if (number == "")
+      return
+    for (let i = 0; i < bankaccounts.length; i++) {
+      if (bankaccounts[i]["number"] === number) {
+        return { error: 0, status: 200, data: bankaccounts[i]["_id"] }
+      }
+    }
+    return { error: 1, status: 404, data: 'nw' }
   }
 
   function getTransactions(data){
@@ -265,6 +286,19 @@ async function addOrderByUserId(data){
     let transactions = transactions.filter(t => t.account === account._id)  
     return {error: 0, status: 200, data: transactions}
 
+  }
+
+  function getTransationsByNumber(data){
+    let number = data.number
+    if (!number) {
+      return {error: 1, status: 400, data: 'numéro de compte requis'}
+    }
+    let account = bankaccounts.find(a => a.number === number)
+    if (!account) {
+      return {error: 1, status: 404, data: 'compte non trouvé'}
+    }
+    let transactions = transactions.filter(t => t.account === account._id)
+    return {error: 0, status: 200, data: transactions}
   }
 
   function createWithdraw(data){
@@ -326,50 +360,61 @@ async function addOrderByUserId(data){
     return {error: 1, status: 400, data: 'solde insuffisant'}
   }
 
-  function validateOperation(data){
+  function validateOperation(data) {
     let currentAccount = data.currentAccount
     let amount = data.amount
     let isRecipient = data.isRecipient
-    let dest = data.recipient
-
-    console.log("isRecipient: ", isRecipient)
-
-    if (!currentAccount) {
-      return {error: 1, status: 400, data: 'compte non fourni'}
-    }
+  
     if (!amount) {
-      return {error: 1, status: 400, data: 'montant non fourni'}
+      alert("Erreur : Le montant doit être renseigné.");
+      return { error: 1, status: 404, data: 'Le montant doit être renseigné.' };
     }
-    if (!isRecipient) {
-      return {error: 1, status: 400, data: 'destinataire non fourni'}
+  
+    if (amount <= 0) {
+      alert("Erreur : Le montant doit être supérieur à 0.");
+      return { error: 1, status: 404, data: 'Le montant doit être supérieur à 0.' };
     }
-
-    let transaction = {'_id': currentAccount, 'amount': amount, 'acount': currentAccount, 'date': {$date: new Date()}, 'uuid': uuidv4()}
-
+  
+    let transaction = {
+      '_id': currentAccount._id,
+      'amount': -amount,
+      'account': currentAccount._id,
+      'date': { $date: new Date() },
+      'uuid': uuidv4()
+    }
     if (isRecipient) {
-      let destAccount = getAccount({number: dest})
-      if (destAccount.error === 1) {
-        return {error: 1, status: 404, data: 'compte destinataire non trouvé'}
+      // Si le destinataire est renseigné
+      let recipient_number = data.recipient
+      if (!recipient_number) {
+        alert("Erreur : Le destinataire doit être renseigné.");
+        return { error: 1, status: 404, data: 'Le destinataire doit être renseigné.' };
       }
-      transaction['amount'] = -amount
-      transaction['acount'] = destAccount._id
+  
+      // On récupère le compte du destinataire
+      let recipient = null;
+      for (let i = 0; i < bankaccounts.length; i++) {
+        if (bankaccounts[i].number === recipient_number) {
+          recipient = bankaccounts[i];
+          break;
+        }
+      }
+  
+      if (!recipient) {
+        alert("Erreur : Le destinataire n'existe pas.");
+        return { error: 1, status: 404, data: 'Le destinataire n\'existe pas.' };
+      }
+  
+      // On ajout l'argent sur le compte du destinataire (si il existe)
+      recipient.amount += amount;
+      transaction['destination'] = recipient._id;
     }
-
-    if (!isRecipient) {
-      let account = getAccount({number: currentAccount.number})
-      if (account.error === 1) {
-        return {error: 1, status: 404, data: 'compte non trouvé'}
-      }
-      if (account.data.amount < amount){
-        return {error: 1, status: 400, data: 'solde insuffisant'}
-      }
-      account.data.amount -= amount
-    }
-
-    transactions.push(transaction)
-    return {error: 0, status: 200, data: transaction}
-
-
+    // On retire l'argent du compte du payeur
+    currentAccount.amount -= amount;
+  
+    // On ajoute la transaction
+    transactions.push(transaction);
+  
+    return { error: 0, status: 200, data: transaction.uuid };
   }
 
 
@@ -387,6 +432,7 @@ export default{
   cancelOrderById,
   getAccount,
   getTransactions,
+  getTransationsByNumber,
   createWithdraw,
   createPayment,
   validateOperation

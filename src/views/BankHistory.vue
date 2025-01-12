@@ -59,13 +59,13 @@ export default {
             return this.formatedTransactions;
         },
         formatedTransactions() {
-            // Retourne un tableau vide si accountTransactions est nul ou n'est pas un tableau
-            if (!Array.isArray(this.accountTransactions)) return [];
-
+            if (!Array.isArray(this.accountTransactions)) {
+                return [];
+            }
             return this.accountTransactions.map(transaction => ({
                 ...transaction,
-                date: transaction.date?.$date || transaction.date, // Gestion des dates
-                direction: transaction.amount < 0 ? "S (source)" : "D (destinataire)",
+                date: transaction.date.$date,
+                direction: transaction.amount < 0 ? 'S (source)' : 'D (destinataire)',
             }));
         },
         account_id() {
@@ -75,15 +75,22 @@ export default {
     methods: {
         ...mapActions('bank', ['getTransactions']),
         showTransactionDetails(item) {
-            navigator.clipboard.writeText(item.uuid)
-            alert(`Transaction UUID: ${item.uuid} \n(l'UUID a été copié dans le presse-papier)`);
+            alert(`Transaction UUID: ${item.uuid} `);
         },
         showSelectedTransactions(selectedItems) {
             alert(`Selected Transactions UUIDs: ${selectedItems.map(item => item.uuid).join(', ')}`);
         },
     },
     mounted() {
-        this.getTransactions({ account_id: this.account_id });
-    },
+    this.getTransactions({ account_id: this.account_id })
+        .then(() => {
+        console.log('Transactions:', this.accountTransactions);
+        console.log('Formatted transactions:', this.formatedTransactions);
+        console.log('Filtered transactions:', this.filteredTransactions);
+        })
+        .catch(error => {
+        console.error('Error fetching transactions:', error);
+        });
+    }
 };
 </script>

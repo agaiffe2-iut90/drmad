@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>Shaci shaco prout poney</h1>
+        <h1>Bienvenue dans la boutique du DR Mad</h1>
     </div>
 </template>
 
