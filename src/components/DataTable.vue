@@ -1,98 +1,54 @@
 <template>
     <div>
-      <!-- Table -->
-      <table>
-        <thead>
-          <tr>
-            <!-- Si itemCheck est true, ajouter la colonne de sélection -->
-            <th v-if="itemCheck">Sélection</th>
-            <!-- Entêtes dynamiques provenant de headers -->
-            <th v-for="(header, index) in headers" :key="index">{{ header.label }}</th>
-            <!-- Si itemButton est true, ajouter la colonne d'actions -->
-            <th v-if="itemButton">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Lignes de la table -->
-          <tr v-for="(item, index) in items" :key="index">
-            <!-- Case à cocher dans la première colonne si itemCheck est true -->
-            <td v-if="itemCheck">
-              <input type="checkbox" :value="item" @change="toggleSelection(item)" />
-            </td>
-  
-            <!-- Affichage des données des items -->
-            <td v-for="(header, idx) in headers" :key="idx">{{ item[header.name] }}</td>
-  
-            <!-- Colonne d'actions si itemButton est true -->
-            <td v-if="itemButton">
-              <button @click="onItemClick(item)">Action</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-  
-      <!-- Si tableButton est true, afficher un bouton après la table -->
-      <div v-if="tableButton">
-        <button @click="onTableClick">Valider Sélections</button>
-      </div>
+        <DataTable
+                :headers="headers"
+                :items="items"
+                :itemCheck="true"
+                :itemButton="true"
+                :tableButton="true"
+                @itemClicked="handleItemClicked"
+                @tableClicked="handleTableClicked"
+        >
+            <!-- Slot pour personnaliser le bouton d'action -->
+            <template v-slot:actionButton>
+                <span>View</span>
+            </template>
+
+            <!-- Slot pour personnaliser le bouton après la table -->
+            <template v-slot:tableButton>
+                <span>Submit Selected</span>
+            </template>
+        </DataTable>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'DataTable',
-  
-    props: {
-      headers: {
-        type: Array,
-        required: true
-      },
-      items: {
-        type: Array,
-        required: true
-      },
-      itemCheck: {
-        type: Boolean,
-        default: false
-      },
-      itemButton: {
-        type: Boolean,
-        default: false
-      },
-      tableButton: {
-        type: Boolean,
-        default: false
-      }
+</template>
+
+<script>
+import DataTable from './DataTable.vue';
+
+export default {
+    components: {
+        DataTable,
     },
-  
     data() {
-      return {
-        selectedItems: []  // Pour stocker les items sélectionnés
-      };
+        return {
+            headers: [
+                { label: 'Nom', name: 'name' },
+                { label: 'Prix', name: 'price' },
+            ],
+            items: [
+                { name: 'Grippe', price: 1000, strength: 5 },
+                { name: 'Covid', price: 150, strength: 5 },
+                { name: 'Choléra', price: 6666, strength: 20 },
+            ],
+        };
     },
-  
     methods: {
-      // Ajoute ou supprime un item de la sélection
-      toggleSelection(item) {
-        const index = this.selectedItems.indexOf(item);
-        if (index === -1) {
-          this.selectedItems.push(item); // Si l'item n'est pas dans la liste, on l'ajoute
-        } else {
-          this.selectedItems.splice(index, 1); // Sinon, on l'enlève
-        }
-      },
-  
-      // Emission d'un événement lors du clic sur un bouton d'une ligne
-      onItemClick(item) {
-        this.$emit('itemClicked', item);
-      },
-  
-      // Emission d'un événement lors du clic sur le bouton après la table
-      onTableClick() {
-        this.$emit('tableClicked', this.selectedItems);
-      }
-    }
-  };
-  </script>
-  
-  
+        handleItemClicked(item) {
+            console.log('Item clicked:', item);
+        },
+        handleTableClicked(selectedItems) {
+            console.log('Table button clicked. Selected items:', selectedItems);
+        },
+    },
+};
+</script>
