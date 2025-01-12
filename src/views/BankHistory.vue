@@ -53,7 +53,7 @@ export default {
         account_id() {
             return this.currentAccount.id;
         },
-        
+         
     },
     methods: {
         ...mapActions('bank', ['getTransactions']),
