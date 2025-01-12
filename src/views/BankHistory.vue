@@ -1,163 +1,22 @@
 <template>
-    <div class="bank-history">
-        <header>
-            <slot name="title">
-                <h1>Opérations passées</h1>
-            </slot>
-        </header>
-
-        <!-- Affichage des transactions -->
-        <ul>
-            <li v-for="transaction in filteredTransactions" :key="transaction.id">
-                {{ transaction.description }} - {{ transaction.amount }}
-            </li>
-            <div v-if="filteredTransactions.length === 0">
-                <p>Aucune transaction trouvée.</p>
-            </div>
-
-        </ul>
-
-
-        <!-- Filtre par période -->
-        <div class="filter">
-            <label>
-                <input type="checkbox" v-model="filterActive" />
-                Filtrer par période
-            </label>
-            <div v-if="filterActive" class="date-fields">
-                <label>
-                    Du :
-                    <input type="date" v-model="startDate" @change="onDateChange('start')" />
-                </label>
-                <label>
-                    Au :
-                    <input type="date" v-model="endDate" @change="onDateChange('end')" />
-                </label>
-            </div>
+    <div class="history-wrapper">
+        <h1>
+            <slot name="title">Operations passées</slot>
+        </h1>
+        <label for="periodFilter">Filtrer par période : </label>
+        <input type="checkbox" v-model="periodFilter" id="periodFilter">
+        <div v-if="periodFilter">
+            <label for="start">Du :</label>
+            <input type="date" id="start" v-model="start" />
+            <label for="end">Au :</label>
+            <input type="date" id="end" v-model="end" />
         </div>
-
-        <!-- DataTable pour afficher les transactions -->
-        <DataTable
-            :items="filteredTransactions"
-            :headers="tableHeaders"
-            :itemCheck="true"
-            :itemButton="true"
-            :tableButton="true"
-            @itemClicked="viewDetails"
-            @tableClicked="viewSelected"
-        />
-
-        <!-- Dialogue de détails -->
-        <Dialog v-if="dialogVisible" @close="dialogVisible = false">
-            <p v-if="dialogContent">{{ dialogContent }}</p>
-        </Dialog>
-    </div>
-</template>
-
-<script>
-import DataTable from "@/components/DataTable.vue";
-import { mapActions, mapState } from 'vuex';
-
-export default {
-    name: "BankHistory",
-    components: {
-        DataTable,
-    },
-    data() {
-        return {
-            filterActive: false,
-            startDate: "",
-            endDate: "",
-            dialogVisible: false,
-            dialogContent: "",
-        };
-    },
-    computed: {
-        // Transactions filtrées
-        filteredTransactions() {
-            let filtered = this.accountTransactions;
-
-            if (this.filterActive) {
-                if (this.startDate) {
-                    filtered = filtered.filter((t) => t.date >= this.startDate);
-                }
-                if (this.endDate) {
-                    filtered = filtered.filter((t) => t.date <= this.endDate);
-                }
-            }
-
-            return filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-        },
-        // Headers pour le DataTable
-        tableHeaders() {
-            return [
-                { label: "Montant", name: "amount" },
-                { label: "Date", name: "date" },
-                { label: "Type", name: "type" },
-            ];
-        },
-        // Accès aux transactions du store
-        ...mapState('bank', ['accountTransactions']),
-    },
-    methods: {
-        ...mapActions('bank', ['getTransactions']),  // Récupérer les transactions depuis Vuex
-
-        // Appelée lors de l'arrivée sur la page, pour charger les transactions
-        fetchTransactions() {
-            const accountNumber = "12345";  // Remplacer par le numéro de compte réel
-            this.getTransactions(accountNumber);
-        },
-
-        // Gestion des changements de date pour le filtre
-        onDateChange(field) {
-            if (field === "start" && this.endDate && this.startDate > this.endDate) {
-                this.endDate = "";
-            }
-            if (field === "end" && this.startDate && this.endDate < this.startDate) {
-                this.startDate = "";
-            }
-        },
-
-        // Affichage des détails d'une transaction dans un dialogue
-        viewDetails(item) {
-            this.dialogContent = `UUID: ${item.uuid}`;
-            this.dialogVisible = true;
-        },
-
-        // Affichage des UUIDs sélectionnés
-        viewSelected(selectedItems) {
-            const selectedUuids = selectedItems.map(item => item.uuid).join(", ");
-            this.dialogContent = `UUIDs sélectionnés : ${selectedUuids}`;
-            this.dialogVisible = true;
-        },
-    },
-    mounted() {
-        // Charger les transactions dès que le composant est monté
-        this.fetchTransactions();
-    }
-};
-</script>
-
-<template>
-    <div>
-        <slot name="title">
-            <h1>Opérations passsées</h1>
-        </slot>
-
-        <label for="timeFilter"> Filtrer par période</label>
-        <input type="checkbox" id="timeFilter" v-model="timeFilter" />
-        <div v-if="timeFilter">
-            <label for="startDate">Du</label>
-            <input type="date" id="startDate" v-model="startDate" />
-            <label for="endDate">Au</label>
-            <input type="date" id="endDate" v-model="endDate" />
-        </div>
-        <DataTable :headers="headers" :items="items" :itemButton="true" :tableButton="true"
-        @itemClicked="showTransaction" @tableClicked="showSelectedTransaction" >
-            <template>
+        <DataTable :items="filteredTransactions" :headers="headers" :itemCheck="true" :itemButton="true"
+            :tableButton="true" @itemClicked="showTransactionDetails" @tableClicked="showSelectedTransactions">
+            <template #item-button>
                 Details
             </template>
-            <template>
+            <template #table-button>
                 Voir
             </template>
         </DataTable>
@@ -167,45 +26,64 @@ export default {
 <script>
 import { mapState, mapActions } from 'vuex';
 import DataTable from '@/components/DataTable.vue';
+
 export default {
     name: 'BankHistory',
-    components: { DataTable },
+    components: {
+        DataTable,
+    },
     data: () => ({
-        timeFilter: false,
-        startDate: '',
-        endDate: '',
+        periodFilter: false,
+        start: '',
+        end: '',
         headers: [
-            { name: 'date', label: 'Date' },
-            { name: 'amount', label: 'Montant' },
-            { name: 'recipient', label: 'Destinataire' },
+            { label: "Montant", name: "amount" },
+            { label: "Date", name: "date" },
+            { label: "Source/Destinataire", name: "direction" },
         ],
     }),
     computed: {
         ...mapState('bank', ['currentAccount', 'accountTransactions']),
         filteredTransactions() {
-            if (this.timeFilter) {
-                return this.accountTransactions.filter(transaction => {
-                    return transaction.date >= this.startDate && transaction.date <= this.endDate;
+            if (!Array.isArray(this.formatedTransactions)) {
+                return [];
+            }
+
+            if (this.periodFilter) {
+                return this.formatedTransactions.filter(transaction => {
+                    return (!this.start || transaction.date >= this.start) &&
+                           (!this.end || transaction.date <= this.end);
                 });
             }
-            return this.accountTransactions;
+
+            return this.formatedTransactions;
+        },
+        formatedTransactions() {
+            // Retourne un tableau vide si accountTransactions est nul ou n'est pas un tableau
+            if (!Array.isArray(this.accountTransactions)) return [];
+
+            return this.accountTransactions.map(transaction => ({
+                ...transaction,
+                date: transaction.date?.$date || transaction.date, // Gestion des dates
+                direction: transaction.amount < 0 ? "S (source)" : "D (destinataire)",
+            }));
         },
         account_id() {
-            return this.currentAccount.id;
+            return this.currentAccount?._id || '';
         },
-         
     },
     methods: {
         ...mapActions('bank', ['getTransactions']),
-        showTransaction(item) {
-            console.log('Transaction:', item);
+        showTransactionDetails(item) {
+            navigator.clipboard.writeText(item.uuid)
+            alert(`Transaction UUID: ${item.uuid} \n(l'UUID a été copié dans le presse-papier)`);
         },
-        showSelectedTransaction(selectedItems) {
-            console.log('Transactions sélectionnées:', selectedItems);
+        showSelectedTransactions(selectedItems) {
+            alert(`Selected Transactions UUIDs: ${selectedItems.map(item => item.uuid).join(', ')}`);
         },
     },
     mounted() {
-        this.getTransactions(this.account_id);
+        this.getTransactions({ account_id: this.account_id });
     },
-}
+};
 </script>

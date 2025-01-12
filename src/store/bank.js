@@ -11,86 +11,96 @@ export default ({
         currentAccount: null,
         accountTransactions: [],
         successMessage: '',
+        errorMessage: '',
     }),
 
     mutations: {
         updateCurrentAccount(state, account) {
             state.currentAccount = account;
         },
-        updateAccountAmount(state, amount) {
-            state.accountAmount = amount;
-        },
         updateAccountTransactions(state, transactions) {
             state.accountTransactions = transactions;
-        },
-        updateAccountNumberError(state, error) {
-            state.accountNumberError = error;
         },
         updateSuccessMessage(state, message) {
             state.successMessage = message;
         },
-
-        reset(state){
+        updateErrorMessage(state, message) {
+            state.errorMessage = message;
+        },
+        reset(state) {
             state.currentAccount = null;
             state.accountTransactions = [];
             state.successMessage = '';
-        }
+            state.errorMessage = '';
+        },
     },
 
     actions: {
         async getAccount({ commit }, accountNumber) {
             try {
                 const response = await bankAccountService.getAccount(accountNumber);
-                if (response.data && response.data.number) {
+                if (response.data?.number) {
                     commit('updateCurrentAccount', response.data);
-                    commit('updateAccountNumberError', 0);
-                    return response.data
+                    commit('updateErrorMessage', '');
+                } else {
+                    commit('updateErrorMessage', 'Compte introuvable.');
                 }
-                return null
             } catch (error) {
-                commit('updateAccountNumberError', error.response.status);
-                return null
+                commit('updateErrorMessage', 'Erreur lors de la récupération du compte.');
+                console.error(error);
             }
         },
 
         async getTransactions({ commit }, accountNumber) {
             try {
                 const response = await bankAccountService.getTransactions(accountNumber);
-                commit('updateAccountTransactions', response.data);
+                const formattedTransactions = response.data.map(transaction => ({
+                    ...transaction,
+                    date: transaction.date.$date || transaction.date,
+                    direction: transaction.amount < 0 ? 'S' : 'D',
+                }));
+                commit('updateAccountTransactions', formattedTransactions);
+                commit('updateErrorMessage', '');
             } catch (error) {
-                console.error(error);
-            }
-        },
-
-        async createWithdraw({ commit }, data) {
-            try {
-                const response = await bankAccountService.createWithdraw(data);
-                commit('updateCurrentAccount', response.data);
-            } catch (error) {
-                console.error(error);
-            }
-        },
-
-        async createPayment({ commit }, data) {
-            try {
-                const response = await bankAccountService.createPayment(data);
-                commit('updateCurrentAccount', response.data);
-            } catch (error) {
+                commit('updateErrorMessage', 'Erreur lors de la récupération des transactions.');
                 console.error(error);
             }
         },
 
         async validateOperation({ commit }, data) {
-            const response = await bankAccountService.validateOperation(data);
-            if (response.error === 0) {
-              let message = "L'opération est validée avec le n° : " + response.data + ". Vous pouvez la retrouver dans l'historique";
-              commit('updateSuccessMessage', message);
-              setTimeout(() => {
-                commit('updateSuccessMessage', "");
-              }, 5000);
-            } else {
-              console.error(response.data);
+            if (!data.currentAccount || !data.amount) {
+                console.error("Données incomplètes pour l'opération.");
+                return;
             }
-          },
+        
+            try {
+                const response = await bankAccountService.validateOperation(data);
+        
+                // Inspecte la réponse pour confirmation
+                console.log('Structure de response.data :', response.data);
+        
+                if (response.error === 0) {
+                    // Utilise le champ `uuid` comme identifiant
+                    const operationUuid = response.data?.uuid || 'inconnu';
+        
+                    const message = `L'opération est validée avec le n° : ${operationUuid}. Vous pouvez la retrouver dans l'historique.`;
+                    commit('updateSuccessMessage', message);
+        
+                    // Efface le message après 5 secondes
+                    setTimeout(() => {
+                        commit('updateSuccessMessage', '');
+                    }, 5000);
+                } else {
+                    console.error("Erreur lors de la validation de l'opération :", response.data);
+                }
+            } catch (error) {
+                console.error("Erreur technique lors de la validation :", error);
+            }
+        },
+
+        resetStore({ commit }) {
+            commit('reset');
+        },
     },
-})
+});
+

@@ -1,53 +1,74 @@
 <template>
-    <div>
-        <DataTable
-                :headers="headers"
-                :items="items"
-                :itemCheck="true"
-                :itemButton="true"
-                :tableButton="true"
-                @itemClicked="handleItemClicked"
-                @tableClicked="handleTableClicked"
-        >
-            <!-- Slot pour personnaliser le bouton d'action -->
-            <template v-slot:actionButton>
-                <span>View</span>
-            </template>
-
-            <!-- Slot pour personnaliser le bouton après la table -->
-            <template v-slot:tableButton>
-                <span>Submit Selected</span>
-            </template>
-        </DataTable>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th v-if="itemCheck">Select</th>
+                    <th v-for="header in headers" :key="header.name">
+                        {{ header.label }}
+                    </th>
+                    <th v-if="itemButton">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="item in items" :key="item.id">
+                    <td v-if="itemCheck">
+                        <input type="checkbox" v-model="selectedItems" :value="item" />
+                    </td>
+                    <td v-for="header in headers" :key="header.name">
+                        {{ item[header.name] }}
+                    </td>
+                    <td v-if="itemButton">
+                        <button @click="$emit('itemClicked', item)">
+                            <slot name="item-button" :item="item">
+                                Action
+                            </slot>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <button v-if="tableButton" @click="emitTableClicked" class="table-button">
+            <slot name="table-button">
+                Eventuel bouton
+            </slot>
+        </button>
     </div>
 </template>
 
 <script>
-import DataTable from './DataTable.vue';
-
 export default {
-    components: {
-        DataTable,
+    name: "DataTable",
+    props: {
+        items: {
+            type: Array,
+            required: true,
+        },
+        headers: {
+            type: Array,
+            required: true,
+        },
+        itemCheck: {
+            type: Boolean,
+            default: false,
+        },
+        itemButton: {
+            type: Boolean,
+            default: false,
+        },
+        tableButton: {
+            type: Boolean,
+            default: false,
+        },
     },
     data() {
         return {
-            headers: [
-                { label: 'Nom', name: 'name' },
-                { label: 'Prix', name: 'price' },
-            ],
-            items: [
-                { name: 'Grippe', price: 1000, strength: 5 },
-                { name: 'Covid', price: 150, strength: 5 },
-                { name: 'Choléra', price: 6666, strength: 20 },
-            ],
+            selectedItems: [],
         };
     },
     methods: {
-        handleItemClicked(item) {
-            console.log('Item clicked:', item);
-        },
-        handleTableClicked(selectedItems) {
-            console.log('Table button clicked. Selected items:', selectedItems);
+        emitTableClicked() {
+            this.$emit('tableClicked', this.selectedItems);
         },
     },
 };
